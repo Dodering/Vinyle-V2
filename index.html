@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vinyle personnalisable</title>
+    <style>
+        html, body {
+            background: #EEEEEE;
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+        }
+
+        .vinyle {
+            width: 300px;
+            height: 300px;
+            border-radius: 50%;
+            background: #111111;
+            margin: 200px auto 20px;
+            position: relative;
+            overflow: hidden;
+            animation: rotate 8s linear infinite;
+        }
+
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .vinyle.paused {
+            animation-play-state: paused;
+        }
+
+        .vinyle::after, .vinyle::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 300px;
+            height: 300px;
+            background: white;
+            opacity: 0.4;
+            transform-origin: 0% 0%;
+            transform: skew(20deg, 20deg);
+        }
+
+        .vinyle::before {
+            transform: rotate(180deg) skew(20deg, 20deg);
+        }
+
+        .vinyl-label {
+            position: absolute;
+            top: 10%;
+            left: 10%;
+            width: 80%;
+            height: 80%;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 0 2px rgba(0, 0, 0, 0.5);
+            z-index: 2;
+            cursor: pointer;
+        }
+
+        .vinyl-label img {
+            width: 60%;
+            height: 60%;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.4);
+            padding-top: 60px;
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: 5% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 30%;
+            border-radius: 10px;
+            position: relative; /* Ajout de position relative */
+        }
+
+        .modal-content ul {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        .modal-content ul li {
+            padding: 10px 0;
+            margin-right: 30px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            display: flex;
+            align-items: center;
+        }
+
+        .modal-content ul li:hover {
+            background-color: #f2f2f2;
+            border-radius: 5px;
+        }
+
+        .close {
+            color: #aaaaaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .close:hover,
+        .close:focus {
+            color: #000;
+            text-decoration: none;
+        }
+
+        /* Style de la barre de défilement du lecteur audio */
+        audio::-webkit-media-controls-panel {
+            background-color: #f5f5f5;
+            border-radius: 5px;
+        }
+
+        audio::-webkit-media-controls-current-time-display,
+        audio::-webkit-media-controls-time-remaining-display {
+            color: #333333;
+        }
+
+        #audio {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            bottom: 225px;
+        }
+    </style>
+</head>
+<body>
+    <div class="vinyle" onclick="openModal()">
+        <div class="vinyl-label">
+            <img src="imagedef.png" alt="Vinyle personnalisable">
+        </div>
+    </div>
+
+    <div id="myModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <ul>
+                <li onclick="changeLabel('image.png', 'song1.mp3')">
+                    <img src="image.png" alt="Label" style="width: 40px; height: auto; margin-right: 10px; margin-left: 15px; box-shadow: 0 4px 8px rgba(0, 0, 0.4, 0.4);">
+                    <b>Odeur de l'essence</b> &nbsp; Orelsan
+                </li>
+                <li onclick="changeLabel('image2.png', 'song2.mp3')">
+                    <img src="image2.png" alt="Label" style="width: 40px; height: auto; margin-right: 10px; margin-left: 15px; box-shadow: 0 4px 8px rgba(0, 0, 0.4, 0.4);">
+                    <b>Beau la folie</b> &nbsp; Lomepal
+                </li>
+                <li onclick="changeLabel('image3.png', 'song3.mp3')">
+                    <img src="image3.png" alt="Label" style="width: 40px; height: auto; margin-right: 10px; margin-left: 15px; box-shadow: 0 4px 8px rgba(0, 0, 0.4, 0.4);">
+                    <b>Astronaute</b> &nbsp; An'Om
+                </li>
+                <li onclick="changeLabel('image4.png', 'song4.mp3')">
+                    <img src="image4.png" alt="Label" style="width: 40px; height: auto; margin-right: 10px; margin-left: 15px; box-shadow: 0 4px 8px rgba(0, 0, 0.4, 0.4);">
+                    <b>Where is my mind ?</b> &nbsp; Pixies
+                </li>
+                <!-- Ajoutez d'autres options de label ici -->
+            </ul>
+        </div>
+    </div>
+
+    <audio id="audio" controls onplay="startRotation()" onpause="stopRotation()" onended="playNext()"></audio>
+
+    <script>
+        var labelToAudio = {
+            'image.png': 'song1.mp3',
+            'image2.png': 'song2.mp3',
+            'image3.png': 'song3.mp3',
+            'image4.png': 'song4.mp3'
+            // Ajoutez d'autres associations ici
+        };
+
+        var audioList = ['song1.mp3', 'song2.mp3', 'song3.mp3', 'song4.mp3']; // Liste des fichiers audio
+        var currentAudioIndex = 0; // Index du fichier audio en cours de lecture
+        var vinyl = document.querySelector('.vinyle');
+
+        function openModal() {
+            document.getElementById("myModal").style.display = "block";
+        }
+
+        function closeModal() {
+            document.getElementById("myModal").style.display = "none";
+        }
+
+        function changeLabel(labelImage, audioSrc) {
+            var vinylLabel = document.querySelector('.vinyl-label img');
+            var audioElement = document.getElementById("audio");
+            vinylLabel.src = labelImage;
+            audioElement.src = audioSrc;
+            audioElement.play(); // Lecture de l'audio sélectionné
+            closeModal();
+        }
+
+        function playNext() {
+            currentAudioIndex++; // Passage à la musique suivante
+            if (currentAudioIndex >= audioList.length) {
+                currentAudioIndex = 0; // Si on atteint la fin de la liste, revenir au début
+            }
+            var nextAudioSrc = audioList[currentAudioIndex];
+            var vinylLabel = document.querySelector('.vinyl-label img');
+            var audioElement = document.getElementById("audio");
+            vinylLabel.src = 'image' + (currentAudioIndex + 1) + '.png'; // Changement d'image en fonction de l'index
+            audioElement.src = nextAudioSrc;
+            audioElement.play(); // Lecture de la prochaine musique
+        }
+
+        function startRotation() {
+            vinyl.classList.remove('paused');
+        }
+
+        function stopRotation() {
+            vinyl.classList.add('paused');
+        }
+    </script>
+</body>
+</html>
